@@ -11,7 +11,7 @@ class Admin_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         
-    @app_commands.command(name="listcommands", description="List all registered slash commands")
+    @app_commands.command(name="allcommands", description="List all registered slash commands")
     async def listcommands(self, interaction: discord.Interaction):
         lines = []
 
