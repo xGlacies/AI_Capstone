@@ -28,11 +28,18 @@ class Admin_commands(commands.Cog):
         await interaction.response.send_message(f"```\n{text}\n```", ephemeral=True)
 
     # This file has been refactored with commands moved to:
+    # - admin_controller.py (allcommands)
     # - checkin_controller.py (checkin_game)
-    # - player_management.py (list_players, player_match_history, simulate_checkins)
-    # - matchmaking_controller.py (simulate_volunteers, run_matchmaking)
-    # - match_results_controller.py (record_match_results, record_match_result)
-    # - tier_management.py (view_player_tier, adjust_player_tier, reset_player_tier)
+    # - export_import.py (export_players, import_players)
+    # - match_results_controller.py (record_match_result, record_match_results)
+    # - matchmaking_controller.py (run_matchmaking, simulate_volunteers)
+    # - mvp_voting_controller.py (end_mvp_voting, list_active_mvp_votes, start_mvp_voting, view_mvp_results, view_player_mvps, vote_mvp)
+    # - player_commands.py (playersinfo)
+    # - player_management.py (get_toxicity, list_players, player_match_history, simulate_checkins, toxicity)
+    # - player_signup.py (register)
+    # - team_display_controller.py (announce_teams, display_teams)
+    # - team_swap_controller.py (swap_team_players)
+    # - tier_management.py (adjust_player_tier, reset_player_tier, view_player_tier)
 
 
 async def setup(bot):
