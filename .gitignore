@@ -13,3 +13,4 @@ tournament_dbc
 match_making/*
 /service_account.json
 *.pyc
+__pycache__/
