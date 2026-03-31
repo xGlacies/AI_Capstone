@@ -126,7 +126,7 @@ If you prefer using Docker, a Dockerfile is provided in the repository.
 The bot will automatically create necessary database tables on first run, but you can initialize them manually:
 
 ```bash
-python -c "from model.dbc_model import Tournament_DB, Player, Game, Matches, MVP_Votes; db = Tournament_DB(); Player.createTable(db); Game.createTable(db); Matches.createTable(db); MVP_Votes.createTable(db)"
+python -c "from tournament_bot.models.dbc_model import Tournament_DB, Player, Game, Matches, MVP_Votes; db = Tournament_DB(); Player.createTable(db); Game.createTable(db); Matches.createTable(db); MVP_Votes.createTable(db)"
 ```
 
 ## Running the Bot

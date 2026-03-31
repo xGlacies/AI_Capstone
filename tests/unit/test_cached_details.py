@@ -10,7 +10,7 @@ import discord
 # Add parent directory to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from common.cached_details import Details_Cached
+from tournament_bot.core.cache import Details_Cached
 
 
 @pytest.fixture

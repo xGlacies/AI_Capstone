@@ -1,6 +1,6 @@
 import pytest
 from aioresponses import aioresponses
-from common.riot_api import RiotAPI
+from tournament_bot.integrations.riot_api import RiotAPI
 
 @pytest.mark.asyncio
 async def test_fetch_summoner_by_name_success():

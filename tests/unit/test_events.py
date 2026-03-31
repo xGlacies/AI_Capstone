@@ -7,8 +7,8 @@ import os
 import types
 import asyncio
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from controller.events import EventsController
-from model import dbc_model
+from tournament_bot.bot.listeners.member_events import EventsController
+from tournament_bot.models import dbc_model
 
 # We don't need global setup/teardown since we're handling 
 # method replacement in each test itself

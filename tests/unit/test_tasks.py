@@ -8,7 +8,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from common.tasks import Tasks_Collection
+from tournament_bot.core.tasks import Tasks_Collection
 
 @pytest.mark.asyncio
 async def test_promote_player_tier():
@@ -17,7 +17,7 @@ async def test_promote_player_tier():
     dummy_bot.wait_until_ready = AsyncMock()
     
     # Create mock settings
-    with patch('common.tasks.settings') as mock_settings:
+    with patch('tournament_bot.core.tasks.settings') as mock_settings:
         # Configure mock settings
         mock_settings.TIER_LIST = ['bronze', 'silver', 'gold', 'platinum']
         mock_settings.MIN_GAME_PLAYED = 10
@@ -45,9 +45,9 @@ async def test_promote_player_tier():
         ]
 
         # Mock database and relevant methods
-        with patch('common.tasks.Tournament_DB') as mock_db_class, \
-             patch('common.tasks.Player_game_info.fetch_for_tier_promotion') as mock_fetch, \
-             patch('common.tasks.Player_game_info.update_tier') as mock_update:
+        with patch('tournament_bot.core.tasks.Tournament_DB') as mock_db_class, \
+             patch('tournament_bot.core.tasks.Player_game_info.fetch_for_tier_promotion') as mock_fetch, \
+             patch('tournament_bot.core.tasks.Player_game_info.update_tier') as mock_update:
             
             # Set up return values
             mock_db_instance = MagicMock()
@@ -81,7 +81,7 @@ async def test_before_promote_player_tier():
     dummy_bot.wait_until_ready = AsyncMock()
     
     # Create mock settings
-    with patch('common.tasks.settings') as mock_settings:
+    with patch('tournament_bot.core.tasks.settings') as mock_settings:
         mock_settings.TIER_LIST = ['bronze', 'silver', 'gold']
         
         # Create Tasks_Collection instance with our mocked settings
@@ -103,8 +103,8 @@ async def test_non_existent_tier():
     dummy_bot.wait_until_ready = AsyncMock()
     
     # Create mock settings and logger
-    with patch('common.tasks.settings') as mock_settings, \
-         patch('common.tasks.logger') as mock_logger:
+    with patch('tournament_bot.core.tasks.settings') as mock_settings, \
+         patch('tournament_bot.core.tasks.logger') as mock_logger:
         
         # Configure mock settings
         mock_settings.TIER_LIST = ['bronze', 'silver', 'gold']
@@ -124,9 +124,9 @@ async def test_non_existent_tier():
         ]
 
         # Mock database and relevant methods
-        with patch('common.tasks.Tournament_DB') as mock_db_class, \
-             patch('common.tasks.Player_game_info.fetch_for_tier_promotion') as mock_fetch, \
-             patch('common.tasks.Player_game_info.update_tier') as mock_update:
+        with patch('tournament_bot.core.tasks.Tournament_DB') as mock_db_class, \
+             patch('tournament_bot.core.tasks.Player_game_info.fetch_for_tier_promotion') as mock_fetch, \
+             patch('tournament_bot.core.tasks.Player_game_info.update_tier') as mock_update:
             
             # Set up return values
             mock_db_instance = MagicMock()

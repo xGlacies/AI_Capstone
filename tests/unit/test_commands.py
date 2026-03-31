@@ -5,9 +5,9 @@ from discord import Interaction, Permissions
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from controller.checkin_controller import CheckinController
-from controller.player_management import PlayerManagement
-from controller.tier_management import TierManagement
+from tournament_bot.bot.commands.checkin import CheckinController
+from tournament_bot.bot.commands.player_management import PlayerManagement
+from tournament_bot.bot.commands.tier_management import TierManagement
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ async def test_checkin_admin(test_bot, mock_interaction):
     cog = CheckinController(test_bot)
     
     # Mock the settings
-    with patch("controller.checkin_controller.settings") as mock_settings:
+    with patch("tournament_bot.bot.commands.checkin.settings") as mock_settings:
         # Set the correct channel name
         mock_settings.TOURNAMENT_CH = "tournament-channel"
         
@@ -64,7 +64,7 @@ async def test_checkin_admin(test_bot, mock_interaction):
         # Set up the mock channel in the guild
         mock_interaction.guild.channels = [mock_channel]
         
-        with patch("controller.checkin_controller.CheckinView", return_value=MagicMock()) as mock_view, \
+        with patch("tournament_bot.bot.commands.checkin.CheckinView", return_value=MagicMock()) as mock_view, \
              patch("asyncio.sleep", AsyncMock()) as mock_sleep:
              
             mock_view.return_value.message = MagicMock()
@@ -94,8 +94,8 @@ async def test_view_player_tier_admin(test_bot, mock_interaction):
     """Test /view_player_tier command for admins with a valid player."""
     cog = TierManagement(test_bot)
     
-    with patch("controller.tier_management.Tournament_DB") as mock_db_class, \
-         patch("controller.tier_management.Game") as mock_game_class:
+    with patch("tournament_bot.bot.commands.tier_management.Tournament_DB") as mock_db_class, \
+         patch("tournament_bot.bot.commands.tier_management.Game") as mock_game_class:
          
         mock_db = MagicMock()
         mock_game = MagicMock()
@@ -135,8 +135,8 @@ async def test_view_player_tier_invalid_player(test_bot, mock_interaction):
     """Test /view_player_tier when an invalid player is given."""
     cog = TierManagement(test_bot)
 
-    with patch("controller.tier_management.Tournament_DB") as mock_db_class, \
-         patch("controller.tier_management.Game") as mock_game_class:
+    with patch("tournament_bot.bot.commands.tier_management.Tournament_DB") as mock_db_class, \
+         patch("tournament_bot.bot.commands.tier_management.Game") as mock_game_class:
          
         mock_db = MagicMock()
         mock_game = MagicMock()
@@ -174,7 +174,7 @@ async def test_toxicity_update_admin(test_bot, mock_interaction):
     """Test the /toxicity command for admins when a valid player is found."""
     cog = PlayerManagement(test_bot)
 
-    with patch("controller.player_management.PlayerModel.update_toxicity", return_value=True):
+    with patch("tournament_bot.bot.commands.player_management.PlayerModel.update_toxicity", return_value=True):
         await cog.toxicity.callback(cog, mock_interaction, player="toxic_player")
 
         mock_interaction.response.send_message.assert_called_once_with(
@@ -186,7 +186,7 @@ async def test_toxicity_update_invalid_player(test_bot, mock_interaction):
     """Test the /toxicity command when a player is not found."""
     cog = PlayerManagement(test_bot)
 
-    with patch("controller.player_management.PlayerModel.update_toxicity", return_value=False):
+    with patch("tournament_bot.bot.commands.player_management.PlayerModel.update_toxicity", return_value=False):
         await cog.toxicity.callback(cog, mock_interaction, player="unknown_player")
 
         mock_interaction.response.send_message.assert_called_once_with(
@@ -209,7 +209,7 @@ async def test_get_toxicity(test_bot, mock_interaction):
     """Test the /get_toxicity command when a player is found."""
     cog = PlayerManagement(test_bot)
     
-    with patch("controller.player_management.Player") as mock_player_class:
+    with patch("tournament_bot.bot.commands.player_management.Player") as mock_player_class:
         mock_player = MagicMock()
         mock_player_class.return_value = mock_player
         
@@ -234,7 +234,7 @@ async def test_get_toxicity_player_not_found(test_bot, mock_interaction):
     """Test the /get_toxicity command when a player is not found."""
     cog = PlayerManagement(test_bot)
     
-    with patch("controller.player_management.Player") as mock_player_class:
+    with patch("tournament_bot.bot.commands.player_management.Player") as mock_player_class:
         mock_player = MagicMock()
         mock_player_class.return_value = mock_player
         

@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from model.dbc_model import Tournament_DB, Player, Game, MVP_Votes, Matches, Player_game_info
+from tournament_bot.models.dbc_model import Tournament_DB, Player, Game, MVP_Votes, Matches, Player_game_info
 
 
 @pytest.fixture()
@@ -126,7 +126,7 @@ def test_create_game_table(db_instance):
 
 
 def test_update_pref(db_instance):
-    from model.dbc_model import Player, Game
+    from tournament_bot.models.dbc_model import Player, Game
     import sqlite3
 
     # Create Player table first

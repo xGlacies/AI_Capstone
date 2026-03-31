@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch, AsyncMock, call
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from controller.team_swap_controller import TeamSwapController
-from model.dbc_model import Tournament_DB, Matches
-from view.team_swap_view import TeamSwapView
+from tournament_bot.bot.commands.team_swap import TeamSwapController
+from tournament_bot.models.dbc_model import Tournament_DB, Matches
+from tournament_bot.bot.views.team_swap import TeamSwapView
 
 # Regular unittest tests for synchronous functions
 class TestTeamSwap(unittest.TestCase):

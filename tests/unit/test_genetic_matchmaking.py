@@ -31,9 +31,9 @@ def sample_players():
 @pytest.fixture
 def matchmaker():
     """Create a matchmaker instance with mocked database connections"""
-    with patch('controller.genetic_match_making.Tournament_DB') as mock_db, \
-         patch('controller.genetic_match_making.Game') as mock_game, \
-         patch('controller.genetic_match_making.Player') as mock_player:
+    with patch('tournament_bot.bot.services.genetic_matchmaking.Tournament_DB') as mock_db, \
+         patch('tournament_bot.bot.services.genetic_matchmaking.Game') as mock_game, \
+         patch('tournament_bot.bot.services.genetic_matchmaking.Player') as mock_player:
         
         matchmaker = GeneticMatchMaking()
         
@@ -50,7 +50,7 @@ def matchmaker():
 async def test_calculate_player_tier(matchmaker):
     """Test calculating player tier"""
     # Mock the imported function
-    with patch('controller.match_making.calculate_player_tier', return_value=3.5):
+    with patch('tournament_bot.bot.services.matchmaking.calculate_player_tier', return_value=3.5):
         # Test with a player that doesn't have calculated_tier
         player = {'tier': 'gold', 'rank': 'II'}
         result = await matchmaker.calculate_player_tier(player)
@@ -356,7 +356,7 @@ async def test_fetch_player_data(matchmaker):
 async def test_load_players_from_json(matchmaker):
     """Test loading players from JSON file"""
     # Mock get_random_players function
-    with patch('controller.match_making.get_random_players', return_value=[{'user_id': 'test', 'tier': 'gold'}]):
+    with patch('tournament_bot.bot.services.matchmaking.get_random_players', return_value=[{'user_id': 'test', 'tier': 'gold'}]):
         result = await matchmaker.load_players_from_json(count=5)
         
         # Verify results
@@ -379,7 +379,7 @@ async def test_save_matchmaking_results(matchmaker):
     ]
     
     # Mock Matches.get_next_match_id
-    with patch('model.dbc_model.Matches') as mock_matches:
+    with patch('tournament_bot.models.dbc_model.Matches') as mock_matches:
         mock_matches.return_value.get_next_match_id.return_value = 1
         
         # Call the method

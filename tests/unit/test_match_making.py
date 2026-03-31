@@ -89,7 +89,7 @@ def test_calculate_player_tier():
 
 def test_get_random_players_from_specific_rank(sample_player_data):
     """Test getting random players from a specific rank"""
-    with patch("controller.match_making.load_player_data", return_value=sample_player_data), \
+    with patch("tournament_bot.bot.services.matchmaking.load_player_data", return_value=sample_player_data), \
          patch("random.sample", side_effect=lambda lst, k: lst[:k]), \
          patch("random.choice", side_effect=lambda lst: lst[0]), \
          patch("random.randint", side_effect=lambda a, b: a), \
@@ -108,7 +108,7 @@ def test_get_random_players_from_specific_rank(sample_player_data):
 
 def test_get_random_players_from_all_ranks(sample_player_data):
     """Test getting random players from all ranks"""
-    with patch("controller.match_making.load_player_data", return_value=sample_player_data), \
+    with patch("tournament_bot.bot.services.matchmaking.load_player_data", return_value=sample_player_data), \
          patch("random.sample", side_effect=lambda lst, k: lst[:k]), \
          patch("random.choice", side_effect=lambda lst: lst[0]), \
          patch("random.randint", side_effect=lambda a, b: a), \
@@ -124,7 +124,7 @@ def test_get_random_players_from_all_ranks(sample_player_data):
 
 def test_get_random_players_empty_data():
     """Test get_random_players with empty data"""
-    with patch("controller.match_making.load_player_data", return_value={}):
+    with patch("tournament_bot.bot.services.matchmaking.load_player_data", return_value={}):
         players = get_random_players(count=5)
         assert players == []
 
@@ -416,7 +416,7 @@ def test_set_test_players():
     set_test_players(test_players)
     
     # Import the module to check if the global variable was set
-    import controller.match_making as mm
+    import tournament_bot.bot.services.matchmaking as mm
     assert mm._test_players == test_players
     
     # Reset test players
