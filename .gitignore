@@ -14,3 +14,4 @@ match_making/*
 /service_account.json
 *.pyc
 __pycache__/
+logs/*

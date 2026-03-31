@@ -9,7 +9,7 @@ from unittest.mock import patch, MagicMock, mock_open
 # Add parent directory to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from controller.match_making import (
+from tournament_bot.bot.services.matchmaking import (
     load_player_data, calculate_player_tier, get_random_players, 
     intialSortingPlayer, performance, relativePerformance, teamPerformance, 
     possible_assighn_role, isPlayerRoleprefered, assignPlayer_toTeam, 
