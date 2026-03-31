@@ -1,5 +1,7 @@
 import asyncio
 
+from discord import errors
+
 from tournament_bot.config import settings
 from tournament_bot.core.cache import Details_Cached
 
