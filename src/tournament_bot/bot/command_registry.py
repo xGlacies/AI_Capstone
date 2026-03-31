@@ -24,4 +24,7 @@ PACKAGE_COMMAND_MODULES = [
 
     # Event listeners
     "tournament_bot.bot.listeners.member_events",
+
+    # Riot API
+    "tournament_bot.bot.services.api",
 ]

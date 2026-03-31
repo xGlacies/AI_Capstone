@@ -24,10 +24,13 @@ class RiotAPI:
         encoded_name = summoner_name.replace(' ', '%20')
         url = f"{self.base_url}/summoner/v4/summoners/by-name/{encoded_name}"
         
+        logger.info(f"Fetching summoner by name: {summoner_name}")
+
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=self.headers) as response:
                     if response.status == 200:
+                        logger.info(f"Successfully fetched summoner: {summoner_name}")
                         return await response.json()
                     elif response.status == 404:
                         logger.info(f"Summoner {summoner_name} not found")
@@ -43,11 +46,14 @@ class RiotAPI:
         """Fetch a summoner's ranked stats by their summoner ID"""
         url = f"{self.base_url}/league/v4/entries/by-summoner/{summoner_id}"
         
+        logger.info(f"Fetching ranked stats for summoner ID: {summoner_id}")
+
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=self.headers) as response:
                     if response.status == 200:
                         data = await response.json()
+                        logger.info(f"Successfully fetched ranked stats for summoner ID: {summoner_id}")
                         # Find solo queue stats
                         for queue in data:
                             if queue.get('queueType') == 'RANKED_SOLO_5x5':
@@ -68,6 +74,8 @@ class RiotAPI:
         Get a player's information from the Riot API, including their rank
         Returns a dictionary with player's information or None if not found
         """
+        logger.info(f"Getting player info for: {summoner_name}")
+
         # First get summoner data
         summoner_data = await self.fetch_summoner_by_name(summoner_name)
         if not summoner_data:
@@ -103,6 +111,8 @@ class RiotAPI:
             if total_games > 0:
                 player_info['wr'] = (player_info['wins'] / total_games) * 100
         
+        logger.info(f"Built player info for: {summoner_name}")
+
         return player_info
 
     async def get_champion_masteries(self, summoner_id, count=5):
@@ -111,10 +121,13 @@ class RiotAPI:
         if count:
             url += f"?count={count}"
         
+        logger.info(f"Fetching champion masteries for summoner ID: {summoner_id}")
+
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=self.headers) as response:
                     if response.status == 200:
+                        logger.info(f"Successfully fetched champion masteries for summoner ID: {summoner_id}")
                         return await response.json()
                     else:
                         logger.error(f"Error fetching champion masteries: {response.status}")

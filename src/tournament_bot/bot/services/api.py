@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands, tasks
 from tournament_bot.config import settings
@@ -50,6 +51,7 @@ class Api_Collection(commands.Cog):
     @fetch_all_players_details.before_loop
     async def before_fetch_all_players_details(self):
         await self.bot.wait_until_ready()
+        await asyncio.sleep(10)  # delay FIRST run
 
 
     async def get_player_details(interaction: discord.Interaction, game_name, tag_id):
