@@ -8,7 +8,7 @@ from tournament_bot.config import settings
 """
 async def openAi_teamUp(players):
     client = OpenAI(
-        api_key= settings.API_KEY 
+        api_key= settings.OPEN_AI_KEY 
     )
 
     prompt = """

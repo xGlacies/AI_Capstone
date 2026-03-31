@@ -17,7 +17,6 @@ async def main():
 
     sys_client = create_bot()
 
-    sys_client = create_bot()
     register_events(sys_client)
 
     # Initialize the database and create tables
