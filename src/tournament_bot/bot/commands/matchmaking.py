@@ -224,7 +224,7 @@ class MatchmakingController(commands.Cog):
                 # Record volunteers in database with "volunteer" status
                 session_id = f"volunteer_session_{int(asyncio.get_event_loop().time())}"
                 # Get the next match ID for the volunteer session
-                from model.dbc_model import Matches
+                from tournament_bot.models.dbc_model import Matches
                 matches_db = Matches(db_name=settings.DATABASE_NAME)
                 volunteer_match_num = matches_db.get_next_match_id()
                 for player in volunteers:
@@ -441,7 +441,7 @@ class MatchmakingController(commands.Cog):
 
                 for pool_idx, pool in enumerate(pools):
                     # Get the next match ID
-                    from model.dbc_model import Matches
+                    from tournament_bot.models.dbc_model import Matches
                     matches_db = Matches(db_name=settings.DATABASE_NAME)
                     match_num = matches_db.get_next_match_id()
                     match_id = f"match_{match_num}"
@@ -641,7 +641,7 @@ class MatchmakingController(commands.Cog):
                 if participation_players:
                     participation_id = f"participation_{int(asyncio.get_event_loop().time())}"
                     # Get the next match ID for the participation session
-                    from model.dbc_model import Matches
+                    from tournament_bot.models.dbc_model import Matches
                     matches_db = Matches(db_name=settings.DATABASE_NAME)
                     participation_match_num = matches_db.get_next_match_id()
                     for player in participation_players:

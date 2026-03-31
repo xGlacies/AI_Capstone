@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import random
 from tournament_bot.models.giveaway import GiveawayModel
-from tournament_bot.bot.views.giveway import GiveawayView
+from src.tournament_bot.bot.views.giveaway import GiveawayView
 
 class Giveaway(commands.Cog):
     def __init__(self, bot):

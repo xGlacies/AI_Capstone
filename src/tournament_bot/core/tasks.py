@@ -1,6 +1,6 @@
 from discord.ext import commands, tasks
 from config import settings
-from model.dbc_model import Tournament_DB , Player_game_info
+from tournament_bot.models.dbc_model import Tournament_DB, Player_game_info
 
 logger = settings.logging.getLogger("discord")
 

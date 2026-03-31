@@ -512,7 +512,7 @@ class GeneticMatchMaking:
         """Save the matchmaking results to the database"""
         try:
             # Get the next match ID
-            from model.dbc_model import Matches
+            from tournament_bot.models.dbc_model import Matches
             matches_db = Matches(db_name=settings.DATABASE_NAME)
             match_id = matches_db.get_next_match_id()
             team_id = f"match_{match_id}"
