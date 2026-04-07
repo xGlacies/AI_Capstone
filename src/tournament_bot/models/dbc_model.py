@@ -833,3 +833,18 @@ class MVP_Votes(Tournament_DB):
         except Exception as ex:
             logger.error(f"finalize_mvp_voting failed with error {ex}")
             return None
+        
+class Match_Insights(Tournament_DB):
+    
+    def createTable(self):
+        insight_table_query = """
+            CREATE TABLE IF NOT EXISTS match_insights (
+            match_id TEXT PRIMARY KEY,
+            analysis_summary TEXT,
+            key_matchup TEXT,
+            fairness_rating INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        self.cursor.execute(insight_table_query)
+        self.connection.commit()

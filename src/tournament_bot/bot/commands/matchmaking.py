@@ -495,8 +495,62 @@ class MatchmakingController(commands.Cog):
                     # Calculate role matchup score for display
                     role_matchup_score = matchmaker.calculate_role_matchup_score(team1, team2)
                     role_matchup_percent = round(role_matchup_score * 100)
+                    
+                    # ==========================================
+                    # START OF LLM INTEGRATION: matchmaking_llm_analysis.py
+                    # ==========================================
+                    # Create minimal datasets to save tokens and keep the LLM focused
+                    t1_minimal = [{"name": p.get("game_name"), "tier": p.get("tier"), "rank": p.get("rank"), "role": p.get("assigned_role")} for p in team1]
+                    t2_minimal = [{"name": p.get("game_name"), "tier": p.get("tier"), "rank": p.get("rank"), "role": p.get("assigned_role")} for p in team2]
+                    
+                    # Call our new service
+                    from tournament_bot.bot.services.matchmaking_llm_analysis import analyze_matchup
+                    llm_insights = await analyze_matchup(t1_minimal, t2_minimal, diff)
+
+                    # Log the insights to the database
+                    try:
+                        insight_query = """
+                            INSERT INTO match_insights (match_id, analysis_summary, key_matchup, fairness_rating) 
+                            VALUES (?, ?, ?, ?)
+                        """
+                        db.cursor.execute(
+                            insight_query, 
+                            (
+                                match_id, 
+                                llm_insights['analysis_summary'], 
+                                llm_insights['key_matchup'], 
+                                llm_insights['fairness_rating']
+                            )
+                        )
+                    except Exception as e:
+                        logger.error(f"Failed to save LLM insights to database for {match_id}: {e}")
+                    # ==========================================
+                    # END OF LLM INTEGRATION: matchmaking_llm_analysis.py
+                    # ==========================================
 
                     # Create embeds for the teams
+                    # Create the original math/stats description
+                    stats_desc = f"*(Game {pool_idx + 1} of {game_count})*\n**Role Matchup Balance:** {role_matchup_percent}%"
+                    
+                    # Create the AI insights description
+                    ai_desc = f"**🏆 AI Match Overview:**\n{llm_insights['analysis_summary']}\n\n**⚔️ Key Matchup:** {llm_insights['key_matchup']}\n**⚖️ AI Fairness Rating:** {llm_insights['fairness_rating']}%"
+                    
+                    # Combine them with a clean divider
+                    combined_description = f"{stats_desc}\n\n{ai_desc}"
+
+                    # Create embeds for the teams
+                    team1_embed = discord.Embed(
+                        title=f"Game {pool_idx + 1} - Team 1 (Match ID: {match_id})",
+                        color=discord.Color.blue(),
+                        description=combined_description
+                    )
+
+                    team2_embed = discord.Embed(
+                        title=f"Game {pool_idx + 1} - Team 2 (Match ID: {match_id})",
+                        color=discord.Color.red(),
+                        description=combined_description
+                    )
+                    """
                     team1_embed = discord.Embed(
                         title=f"Game {pool_idx + 1} - Team 1 (Match ID: {match_id})",
                         color=discord.Color.blue(),
@@ -508,7 +562,7 @@ class MatchmakingController(commands.Cog):
                         color=discord.Color.red(),
                         description=f"Game {pool_idx + 1} of {game_count}\nRole Matchup Balance: {role_matchup_percent}%"
                     )
-
+                    """
                     # Role color mapping (using League of Legends colors)
                     role_colors = {
                         "top": "🟥",      # Red

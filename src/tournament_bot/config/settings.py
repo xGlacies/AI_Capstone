@@ -35,6 +35,7 @@ START_API_TASK = os.getenv("START_API_TASK")
 
 #for openAi matchmaking
 OPEN_AI_KEY = os.getenv("OPEN_AI_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 PROMPT = os.getenv("prompt")
 
 # Google Sheets and API settings for export_import
