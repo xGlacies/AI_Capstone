@@ -3,18 +3,196 @@ import asyncio
 import random
 import json
 import requests
-from openai import OpenAI
+#from openai import OpenAI
 from discord import app_commands
 from discord.ext import commands
 from tournament_bot.config import settings
 from tournament_bot.models.dbc_model import Tournament_DB, Game
 from tournament_bot.bot.services.genetic_matchmaking import GeneticMatchMaking
+from google import genai
+from google.genai import types
+
 
 logger = settings.logging.getLogger("discord")
+gemini_key = "AIzaSyDuB8zXX4bkuJxi5YqXOC5_sB9w6lCo3p8"
+client = genai.Client(api_key=gemini_key)
 
-client = OpenAI(
-        api_key= settings.OPEN_AI_KEY 
-    )
+#client = OpenAI(
+#        api_key= settings.OPEN_AI_KEY 
+#    )
+
+def get_hero_roles():
+    roles_dict = {}
+    try:
+        response = requests.get("https://overfast-api.tekrop.fr/heroes")
+        if response.status_code == 200:
+            for hero in response.json():
+                roles_dict[hero['key']] = hero['role']
+    except Exception as e:
+        print(f"Failed to fetch roles: {e}")
+    return roles_dict
+
+def extract_stat(categories, target_category_label, target_stat_label=None):
+    if not categories:
+        return None
+    for category in categories:
+        if category.get('label', '').lower() == target_category_label.lower():
+            if target_stat_label is None:
+                return {stat['label']: stat['value'] for stat in category.get('stats', [])}
+            else:
+                for stat in category.get('stats', []):
+                    if stat.get('label', '').lower() == target_stat_label.lower():
+                        return stat.get('value')
+    return None
+def build_team_report_sync(usernames):
+    """
+    Synchronous function that handles all the API fetching and AI generation.
+    Returns a string containing the final report.
+    """
+    hero_roles = get_hero_roles()
+    if not hero_roles:
+        return "Error: Could not fetch hero role mappings from the API."
+
+    team_data = {}
+
+    for battletag in usernames:
+        formatted_tag = battletag.replace('#', '-')
+        
+        # 1. Fetch summary to check privacy
+        summary_url = f"https://overfast-api.tekrop.fr/players/{formatted_tag}/summary"
+        summary_res = requests.get(summary_url)
+        
+        if summary_res.status_code != 200:
+            continue
+            
+        summary_data = summary_res.json()
+        if summary_data.get('privacy') == 'private':
+            continue
+
+        # 2. Fetch Competitive detailed stats for BOTH PC and Console
+        stats_url = f"https://overfast-api.tekrop.fr/players/{formatted_tag}/stats"
+        res_pc = requests.get(stats_url, params={"platform": "pc", "gamemode": "competitive"})
+        res_console = requests.get(stats_url, params={"platform": "console", "gamemode": "competitive"})
+        
+        stats_pc = res_pc.json() if res_pc.status_code == 200 else {}
+        stats_console = res_console.json() if res_console.status_code == 200 else {}
+
+        if not stats_pc and not stats_console:
+            continue
+
+        # 3. Combine playtime 
+        combined_playtimes = []
+        all_heroes = set(list(stats_pc.keys()) + list(stats_console.keys()))
+        
+        for hero_key in all_heroes:
+            role = hero_roles.get(hero_key)
+            if not role:
+                continue
+                
+            pc_cats = stats_pc.get(hero_key, [])
+            console_cats = stats_console.get(hero_key, [])
+            
+            total_time = get_time_played(pc_cats) + get_time_played(console_cats)
+            
+            # Require at least 1 hour (3600 seconds) of playtime
+            if total_time >= 3600:
+                combined_playtimes.append({
+                    "hero": hero_key,
+                    "role": role,
+                    "time": total_time,
+                    "pc_categories": pc_cats,
+                    "console_categories": console_cats
+                })
+        
+        combined_playtimes.sort(key=lambda x: x['time'], reverse=True)
+        
+        top_heroes = {"tank": [], "damage": [], "support": []}
+        player_extracted_data = {}
+
+        for h in combined_playtimes:
+            role = h['role']
+            # Top 5 per role
+            if len(top_heroes[role]) < 5:
+                top_heroes[role].append(h['hero'])
+                hero_data = {"role": role, "combined_time_played_seconds": h['time']}
+                
+                if h['pc_categories']:
+                    hero_data["pc_stats"] = {
+                        "win_percentage": extract_stat(h['pc_categories'], "Game", "Win Percentage") or extract_stat(h['pc_categories'], "Game", "Win Rate"),
+                        "weapon_accuracy": extract_stat(h['pc_categories'], "Combat", "Weapon Accuracy"),
+                        "average_stats": extract_stat(h['pc_categories'], "Average"),
+                        "hero_specific_stats": extract_stat(h['pc_categories'], "Hero Specific")
+                    }
+                
+                if h['console_categories']:
+                    hero_data["console_stats"] = {
+                        "win_percentage": extract_stat(h['console_categories'], "Game", "Win Percentage") or extract_stat(h['console_categories'], "Game", "Win Rate"),
+                        "weapon_accuracy": extract_stat(h['console_categories'], "Combat", "Weapon Accuracy"),
+                        "average_stats": extract_stat(h['console_categories'], "Average"),
+                        "hero_specific_stats": extract_stat(h['console_categories'], "Hero Specific")
+                    }
+                    
+                player_extracted_data[h['hero']] = hero_data
+        
+        if player_extracted_data:
+            team_data[battletag] = player_extracted_data
+
+    if not team_data:
+        return "No valid, public player data could be retrieved. Make sure profiles are public and have Competitive playtime."
+
+    # 4. Prompt AI
+    ai_prompt_data = json.dumps(team_data, indent=2)
+    
+    system_instruction = """
+    You are an expert Overwatch 2 esports coach. You have been provided with statistical data for a group of players. 
+    The data includes their top 5 most played heroes per role (Tank, Damage, Support) across PC and Console in Competitive mode, including Win Percentage, Weapon Accuracy, Average Stats, and Hero Specific Stats.
+    
+    CRITICAL INSTRUCTION: Do NOT automatically assign the hero with the highest playtime as the Primary Hero. You must analyze the heroes provided for each player and select the best Primary and Alternative heroes based on a holistic review of:
+    1. High Win Percentages.
+    2. Exceptional Weapon Accuracy and high-impact Hero Specific Stats.
+    3. Optimal Synergy with the other team members' strongest heroes.
+
+    Your goal is to build the optimal team composition (Standard 5v5: 1 Tank, 2 Damage, 2 Support) using the players provided. 
+    If there are fewer than 5 players, build the best partial composition possible.
+    
+    Format your response exactly like this:
+    
+    ### Player Assignments
+    ** User: [Player Battletag] **
+    Role Assigned: [Tank / Damage / Support]
+    Primary Hero: [Hero Name]
+    Alternative Hero: [Hero Name]
+    Strengths: 
+    * (Strength Bulletpoint 1)
+    * (Strength Bulletpoint 2)
+    Weaknesses: 
+    * (Weakness Bulletpoint 1)
+    * (Weakness Bulletpoint 2)
+    *(Repeat for all players)*
+    
+    ### Overall Team Analysis
+    Team Strengths: [Explain how the chosen heroes synergize together]
+    Team Weaknesses: [Explain what enemy compositions or situations might counter this team]
+    """
+
+    user_message = f"Here is the player data. Please determine the best team composition by prioritizing win rates, accuracy, and synergy over playtime:\n\n{ai_prompt_data}"
+
+    try:
+        response = client.models.generate_content(
+            model='gemini-3-flash-preview', 
+            contents=user_message,
+            config={"system_instruction": system_instruction}
+        )
+        return response.text
+    except Exception as e:
+        return f"Error communicating with LLM API: {e}"
+def get_time_played(categories):
+    t = extract_stat(categories, "Game", "Time Played")
+    try:
+        return int(t) if t else 0
+    except ValueError:
+        return 0
+
 class MatchmakingController(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -80,182 +258,7 @@ class MatchmakingController(commands.Cog):
             )
             random_button.callback = self.random_callback
             self.add_item(random_button)
-
-        def get_hero_roles():
-            roles_dict = {}
-            try:
-                response = requests.get("https://overfast-api.tekrop.fr/heroes")
-                if response.status_code == 200:
-                    for hero in response.json():
-                        roles_dict[hero['key']] = hero['role']
-            except Exception as e:
-                print(f"Failed to fetch roles: {e}")
-            return roles_dict
-        
-        def extract_stat(categories, target_category_label, target_stat_label=None):
-            if not categories:
-                return None
-            for category in categories:
-                if category.get('label', '').lower() == target_category_label.lower():
-                    if target_stat_label is None:
-                        return {stat['label']: stat['value'] for stat in category.get('stats', [])}
-                    else:
-                        for stat in category.get('stats', []):
-                            if stat.get('label', '').lower() == target_stat_label.lower():
-                                return stat.get('value')
-            return None
-        
-        def build_team_report_sync(usernames):
-            """
-            Synchronous function that handles all the API fetching and AI generation.
-            Returns a string containing the final report.
-            """
-            hero_roles = get_hero_roles()
-            if not hero_roles:
-                return "Error: Could not fetch hero role mappings from the API."
-
-            team_data = {}
-
-            for battletag in usernames:
-                formatted_tag = battletag.replace('#', '-')
-                
-                # 1. Fetch summary to check privacy
-                summary_url = f"https://overfast-api.tekrop.fr/players/{formatted_tag}/summary"
-                summary_res = requests.get(summary_url)
-                
-                if summary_res.status_code != 200:
-                    continue
-                    
-                summary_data = summary_res.json()
-                if summary_data.get('privacy') == 'private':
-                    continue
-
-                # 2. Fetch Competitive detailed stats for BOTH PC and Console
-                stats_url = f"https://overfast-api.tekrop.fr/players/{formatted_tag}/stats"
-                res_pc = requests.get(stats_url, params={"platform": "pc", "gamemode": "competitive"})
-                res_console = requests.get(stats_url, params={"platform": "console", "gamemode": "competitive"})
-                
-                stats_pc = res_pc.json() if res_pc.status_code == 200 else {}
-                stats_console = res_console.json() if res_console.status_code == 200 else {}
-
-                if not stats_pc and not stats_console:
-                    continue
-
-                # 3. Combine playtime 
-                combined_playtimes = []
-                all_heroes = set(list(stats_pc.keys()) + list(stats_console.keys()))
-                
-                for hero_key in all_heroes:
-                    role = hero_roles.get(hero_key)
-                    if not role:
-                        continue
-                        
-                    pc_cats = stats_pc.get(hero_key, [])
-                    console_cats = stats_console.get(hero_key, [])
-                    
-                    total_time = get_time_played(pc_cats) + get_time_played(console_cats)
-                    
-                    # Require at least 1 hour (3600 seconds) of playtime
-                    if total_time >= 3600:
-                        combined_playtimes.append({
-                            "hero": hero_key,
-                            "role": role,
-                            "time": total_time,
-                            "pc_categories": pc_cats,
-                            "console_categories": console_cats
-                        })
-                
-                combined_playtimes.sort(key=lambda x: x['time'], reverse=True)
-                
-                top_heroes = {"tank": [], "damage": [], "support": []}
-                player_extracted_data = {}
-
-                for h in combined_playtimes:
-                    role = h['role']
-                    # Top 5 per role
-                    if len(top_heroes[role]) < 5:
-                        top_heroes[role].append(h['hero'])
-                        hero_data = {"role": role, "combined_time_played_seconds": h['time']}
-                        
-                        if h['pc_categories']:
-                            hero_data["pc_stats"] = {
-                                "win_percentage": extract_stat(h['pc_categories'], "Game", "Win Percentage") or extract_stat(h['pc_categories'], "Game", "Win Rate"),
-                                "weapon_accuracy": extract_stat(h['pc_categories'], "Combat", "Weapon Accuracy"),
-                                "average_stats": extract_stat(h['pc_categories'], "Average"),
-                                "hero_specific_stats": extract_stat(h['pc_categories'], "Hero Specific")
-                            }
-                        
-                        if h['console_categories']:
-                            hero_data["console_stats"] = {
-                                "win_percentage": extract_stat(h['console_categories'], "Game", "Win Percentage") or extract_stat(h['console_categories'], "Game", "Win Rate"),
-                                "weapon_accuracy": extract_stat(h['console_categories'], "Combat", "Weapon Accuracy"),
-                                "average_stats": extract_stat(h['console_categories'], "Average"),
-                                "hero_specific_stats": extract_stat(h['console_categories'], "Hero Specific")
-                            }
-                            
-                        player_extracted_data[h['hero']] = hero_data
-                
-                if player_extracted_data:
-                    team_data[battletag] = player_extracted_data
-
-            if not team_data:
-                return "No valid, public player data could be retrieved. Make sure profiles are public and have Competitive playtime."
-
-            # 4. Prompt Gemini
-            ai_prompt_data = json.dumps(team_data, indent=2)
             
-            system_instruction = """
-            You are an expert Overwatch 2 esports coach. You have been provided with statistical data for a group of players. 
-            The data includes their top 5 most played heroes per role (Tank, Damage, Support) across PC and Console in Competitive mode, including Win Percentage, Weapon Accuracy, Average Stats, and Hero Specific Stats.
-            
-            CRITICAL INSTRUCTION: Do NOT automatically assign the hero with the highest playtime as the Primary Hero. You must analyze the heroes provided for each player and select the best Primary and Alternative heroes based on a holistic review of:
-            1. High Win Percentages.
-            2. Exceptional Weapon Accuracy and high-impact Hero Specific Stats.
-            3. Optimal Synergy with the other team members' strongest heroes.
-
-            Your goal is to build the optimal team composition (Standard 5v5: 1 Tank, 2 Damage, 2 Support) using the players provided. 
-            If there are fewer than 5 players, build the best partial composition possible.
-            
-            Format your response exactly like this:
-            
-            ### Player Assignments
-            ** User: [Player Username] **
-            Role Assigned: [Tank / Damage / Support]
-            Primary Hero: [Hero Name]
-            Alternative Hero: [Hero Name]
-            Strengths: 
-            * (Strength Bulletpoint 1)
-            * (Strength Bulletpoint 2)
-            Weaknesses: 
-            * (Weakness Bulletpoint 1)
-            * (Weakness Bulletpoint 2)
-            *(Repeat for all players)*
-            
-            ### Overall Team Analysis
-            Team Strengths: [Explain how the chosen heroes synergize together]
-            Team Weaknesses: [Explain what enemy compositions or situations might counter this team]
-            """
-
-            user_message = f"Here is the player data. Please determine the best team composition by prioritizing win rates, accuracy, and synergy over playtime:\n\n{ai_prompt_data}"
-
-            try:
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": system_instruction},
-                        {"role": "user", "content": user_message}
-                    ]
-                )
-                return response.choices[0].message.content
-            except Exception as e:
-                return f"Error communicating with LLM API: {e}"
-
-        def get_time_played(categories):
-            t = extract_stat(categories, "Game", "Time Played")
-            try:
-                return int(t) if t else 0
-            except ValueError:
-                return 0
 
         async def select_callback(self, interaction):
             # Get selected player IDs from select menu
@@ -931,7 +934,7 @@ class MatchmakingController(commands.Cog):
             await interaction.response.send_message("Sorry, you don't have required permission to use this command",
                                                   ephemeral=True)
 
-    @app_commands.command(name="team_synergy_ow", description="Generate an synergized Overwatch team comp based on player career hero stats and hero usage time")
+    @app_commands.command(name="team_synergy_ow", description="Generate a synergized Overwatch team comp based on player career hero stats and hero usage time")
     @app_commands.describe(usernames="Comma or space-separated BattleTags (e.g. Player#1234, Hero#5678)")
     async def analyze_team(self, interaction: discord.Interaction, usernames: str):
         # 1. Administrator Check
@@ -960,7 +963,7 @@ class MatchmakingController(commands.Cog):
 
         # 4. Run the blocking API calls in a separate thread so the bot doesn't freeze
         try:
-            report_text = f(build_team_report_sync, player_list)
+            report_text = await asyncio.to_thread(build_team_report_sync, player_list)
             
             # 5. Discord 2000 Character Limit Handling
             if len(report_text) <= 2000:
