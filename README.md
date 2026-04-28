@@ -233,7 +233,7 @@ python -m tournament_bot.main
 
 If successful, the terminal will display: `Logged into server as [BotName]`. Proceed to the next Step below after you verify that the bot is running correctly.
 
-### 9. For Ease of Use, Run the Bot using the local .bat file (Optional)
+### 9. For Ease of Use, Run the Bot using the local #run.bat file during development. (Optional)
 
 Update the filepath after "cd /d " on line 2 to your project directory inside the #run.bat file.
 
@@ -376,7 +376,7 @@ The genetic algorithm matchmaking flow consists of these key steps:
    - `save_matchmaking_results()`: Saves the final teams to the database with a unique match ID
    - Teams are stored with player IDs, team assignments, and a sequential match identifier
 
-#### Performance Metrics & Balancing
+#### Performance Metrics & Balancing (League of Legends)
 
 The system calculates player performance using:
 
@@ -394,7 +394,7 @@ This advanced genetic algorithm approach consistently produces more balanced tea
 
 ---
 
-## Team Display & Announcement
+## Team Display & Announcement (League of Legends)
 
 The bot offers multiple ways to display teams:
 
@@ -433,7 +433,7 @@ See `google_export.md` for detailed setup instructions.
 
 ---
 
-##  Database Structure
+##  Database Structure (League of Legends)
 
 The bot uses SQLite with the following main tables:
 
@@ -485,6 +485,8 @@ All configuration is done through the `.env` file. The main options are:
 | `PRIVATE_CH` | Channel ID for admin-only messages | Yes |
 | `API_KEY` | Riot Games API key | Yes |
 | `API_URL` | Riot Games API URL | Yes |
+| `OPEN_AI_KEY` | OpenAI ChatGPT API key | Optional |
+| `GEMINI_API_KEY` | Google Gemini API key | Optional |
 | `GOOGLE_SHEET_ID` | Google Sheet ID for import/export | Optional |
 | `CELL_RANGE` | Cell range in Google Sheet | Optional |
 | `LOL_SERVICE_PATH` | Path to Google service account JSON | Optional |
@@ -494,26 +496,15 @@ All configuration is done through the `.env` file. The main options are:
 ### Known Bugs
 - Database locking can occur when multiple operations happen simultaneously
   - **Workaround**: Restart the bot to clear any hanging connections
-- Team display may show duplicate players if multiple runs of matchmaking are done with the same match_id
-  - **Fix**: Now using sequential match IDs to avoid conflicts
 - Google Sheets export occasionally times out with large player pools
   - **Workaround**: Export in smaller batches or use a more stable internet connection
-- "NOT NULL constraint failed: game.game_name" error
-  - **Fix**: Game object instantiation corrected to properly handle game_name in API controller
-- Missing setup function in test controllers
-  - **Fix**: All controller files now include proper setup functions
-- Typos in log messages ("tage_id", "puui", and "game detail")
-  - **Fix**: Corrected typos in API controller and common_view.py for clearer log messages
-
-### Undeveloped Features
-- Automatic team balancing based on past performance
-- Player ranking system based on performance
 
 ### Compatibility and Requirements
 - Requires Python 3.8 or later
 - Discord.py library v2.0.0 or higher
 - SQLite database (included with Python)
 - Stable internet connection for Riot API and Discord connectivity
+- API keys for OpenAI ChatGPT and Google Gemini
 - For Google Sheets functionality: Google Cloud account and proper API setup
 
 ## 🔧 Troubleshooting Tips
@@ -523,21 +514,6 @@ All configuration is done through the `.env` file. The main options are:
 - Match display issues? Check that teams were properly created with `/run_matchmaking`
 - Database locked errors? Restart the bot to clear any hanging connections
 - Discord permission issues? Ensure the bot has proper permissions in the server
-
----
-
-##  Future Development
-
-### Planned Improvements
-- Improve image generation with more customization options
-- Expand Google Sheets integration for match results
-- Add tournament bracket management
-- Implement historical player performance tracking
-- Create a web dashboard for tournament management
-- Support for multiple games beyond League of Legends
-- Automated match result verification
-- Add ability for admins to selectively remove players from check-in pool
-- Implement player opt-out functionality after check-in
 
 
 ---
