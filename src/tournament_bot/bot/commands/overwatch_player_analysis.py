@@ -55,16 +55,22 @@ class OverwatchPlayerAnalysisCommands(commands.Cog):
         self.service = OverwatchPlayerAnalysisService()
 
     @app_commands.command(
-        name="player_synergy_ow",
-        description="Analyze one Overwatch player across Tank, Damage, and Support."
+    name="player_synergy_ow",
+    description="Analyze one Overwatch player across roles."
     )
     @app_commands.describe(
-        battletag="Player BattleTag, for example Player#1234"
+        battletag="Player BattleTag, for example Player#1234",
+        mode="Choose Competitive or Quickplay (default: Competitive)"
     )
+    @app_commands.choices(mode=[
+        app_commands.Choice(name="Competitive", value="competitive"),
+        app_commands.Choice(name="Quickplay", value="quickplay"),
+    ])
     async def player_synergy_ow(
         self,
         interaction: discord.Interaction,
-        battletag: str
+        battletag: str,
+        mode: app_commands.Choice[str] = None
     ):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
@@ -76,9 +82,12 @@ class OverwatchPlayerAnalysisCommands(commands.Cog):
         await interaction.response.defer(ephemeral=False, thinking=True)
 
         try:
+            selected_mode = mode.value if mode else "competitive"
+
             report_text = await asyncio.to_thread(
                 self.service.analyze_player_sync,
-                battletag
+                battletag,
+                selected_mode
             )
 
             embeds = build_overwatch_player_embeds(report_text)
