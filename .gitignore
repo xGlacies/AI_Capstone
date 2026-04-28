@@ -15,4 +15,4 @@ match_making/*
 *.pyc
 __pycache__/
 logs/*
-.bat
+*.bat
