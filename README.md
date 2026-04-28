@@ -226,11 +226,11 @@ set PYTHONPATH=src
 python -m tournament_bot.main
 ```
 
-If successful, the terminal will display: `Logged into server as [BotName]`. Proceed to Step 9 below after you verify that the bot is running correctly.
+If successful, the terminal will display: `Logged into server as [BotName]`. Proceed to the next Step below after you verify that the bot is running correctly.
 
 ### 9. For Ease of Use, Run the Bot using the local .bat file (Optional)
 
-Update the filepath after "cd /d " on line 2 to your project directory.
+Update the filepath after "cd /d " on line 2 to your project directory inside the #run.bat file.
 
 ```bash
 @echo off
