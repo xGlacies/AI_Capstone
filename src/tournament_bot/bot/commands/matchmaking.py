@@ -3,7 +3,6 @@ import asyncio
 import random
 import json
 import requests
-#from openai import OpenAI
 from discord import app_commands
 from discord.ext import commands
 from tournament_bot.config import settings
@@ -14,12 +13,8 @@ from google.genai import types
 
 
 logger = settings.logging.getLogger("discord")
-gemini_key = "AIzaSyDuB8zXX4bkuJxi5YqXOC5_sB9w6lCo3p8"
-client = genai.Client(api_key=gemini_key)
-
-#client = OpenAI(
-#        api_key= settings.OPEN_AI_KEY 
-#    )
+#gemini_key = "AIzaSyDuB8zXX4bkuJxi5YqXOC5_sB9w6lCo3p8"
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 def get_hero_roles():
     roles_dict = {}
@@ -54,6 +49,7 @@ def build_team_report_sync(usernames):
         return "Error: Could not fetch hero role mappings from the API."
 
     team_data = {}
+    skipped_players = {}  # NEW: Track players who fail validation
 
     for battletag in usernames:
         formatted_tag = battletag.replace('#', '-')
@@ -63,10 +59,12 @@ def build_team_report_sync(usernames):
         summary_res = requests.get(summary_url)
         
         if summary_res.status_code != 200:
+            skipped_players[battletag] = "Profile not found or API error (Check spelling/casing)."
             continue
             
         summary_data = summary_res.json()
         if summary_data.get('privacy') == 'private':
+            skipped_players[battletag] = "Profile is set to private."
             continue
 
         # 2. Fetch Competitive detailed stats for BOTH PC and Console
@@ -78,6 +76,7 @@ def build_team_report_sync(usernames):
         stats_console = res_console.json() if res_console.status_code == 200 else {}
 
         if not stats_pc and not stats_console:
+            skipped_players[battletag] = "No competitive stats found."
             continue
 
         # 3. Combine playtime 
@@ -134,7 +133,9 @@ def build_team_report_sync(usernames):
                     
                 player_extracted_data[h['hero']] = hero_data
         
-        if player_extracted_data:
+        if not player_extracted_data:
+            skipped_players[battletag] = "Not enough competitive playtime (requires >= 1 hour on at least one hero)."
+        else:
             team_data[battletag] = player_extracted_data
 
     if not team_data:
@@ -183,7 +184,17 @@ def build_team_report_sync(usernames):
             contents=user_message,
             config={"system_instruction": system_instruction}
         )
-        return response.text
+        
+        final_report = response.text
+        
+        # Append skipped players to the end of the report
+        if skipped_players:
+            final_report += "\n\n### ⚠️ Excluded Players\n"
+            for player, reason in skipped_players.items():
+                final_report += f"* **{player}**: {reason}\n"
+                
+        return final_report
+        
     except Exception as e:
         return f"Error communicating with LLM API: {e}"
 def get_time_played(categories):
@@ -934,7 +945,7 @@ class MatchmakingController(commands.Cog):
             await interaction.response.send_message("Sorry, you don't have required permission to use this command",
                                                   ephemeral=True)
 
-    @app_commands.command(name="team_synergy_ow", description="Generate a synergized Overwatch team comp based on player career hero stats and hero usage time")
+    @app_commands.command(name="team_synergy_ow", description="Generate a synergized Overwatch team comp based on career hero stats and hero usage time")
     @app_commands.describe(usernames="Comma or space-separated BattleTags (e.g. Player#1234, Hero#5678)")
     async def analyze_team(self, interaction: discord.Interaction, usernames: str):
         # 1. Administrator Check
