@@ -16,3 +16,4 @@ match_making/*
 __pycache__/
 logs/*
 *.bat
+#run.bat
