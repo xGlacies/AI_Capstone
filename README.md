@@ -233,7 +233,7 @@ python -m tournament_bot.main
 
 If successful, the terminal will display: `Logged into server as [BotName]`. Proceed to the next Step below after you verify that the bot is running correctly.
 
-### 9. For Ease of Use, Run the Bot using the local .bat file (Optional)
+### 9. For Ease of Use, Run the Bot using the local #run.bat file during development. (Optional)
 
 Update the filepath after "cd /d " on line 2 to your project directory inside the #run.bat file.
 
@@ -250,22 +250,42 @@ After saving the file and closing it, you can now click the file to run the bot.
 
 ---
 
-##  Command Overview
+## Command Overview
 
-| Command                                                  | Description |
+| Command | Description |
 |----------------------------------------------------------|-------------|
-| `/display_teams [match_id]`                              | Shows teams for a specific match with role assignments |
-| `/announce_teams [channel] [format]`                     | Announces teams to a channel as text or image |
-| `/run_matchmaking [players_per_game] [selection_method]` | Generates balanced teams using genetic algorithm |
-| `/export_players [custom_name]`                          | Exports player data to Google Sheets |
-| `/import_players [sheet_name]`                           | Imports player data from Google Sheets |
-| `/simulate_volunteers [count]`                           | Simulates volunteers for sitting out |
-| `/record_match_result [match_id] [winning_team]`         | Record match results |
-| `/player_match_history [user]`                           | Shows player details |
-| `/pref [role1] [role2] [role3] [role4] [role5]`          | Set role preferences |
-| `/role`                                                  | Updates role preferences |
-| `/stats [user]`                                          | View detailed player stats and rank |
-| `/help`                                                  | Display help information |
+| `/allcommands` | Lists all registered slash commands for debugging |
+| `/display_teams [match_id]` | Shows teams for a specific match with role assignments |
+| `/announce_teams [channel] [format]` | Announces teams to a channel as text or image |
+| `/run_matchmaking [players_per_game] [selection_method]` | Generates balanced teams using registered players |
+| `/swap_team_players [match_id] [team1_player] [team2_player]` | Swaps two players between teams |
+| `/export_players [custom_name]` | Exports player data to Google Sheets |
+| `/import_players [sheet_name]` | Imports player data from Google Sheets |
+| `/simulate_volunteers [count]` | Simulates volunteers for sitting out |
+| `/simulate_checkins [count] [status]` | Simulates player check-ins for testing |
+| `/checkin_game [timeout]` | Starts the check-in process for the next game |
+| `/record_match_result [match_id] [winning_team]` | Records the result of a single match |
+| `/record_match_results` | Records results for multiple matches |
+| `/player_match_history [player_name]` | Shows a player's match history |
+| `/list_players` | Lists all registered players |
+| `/toxicity [player]` | Adds 1 toxicity point to a player |
+| `/view_player_tier [player_name]` | Views a player's manual tier value |
+| `/adjust_player_tier [player_name] [adjustment] [reason]` | Manually adjusts a player's tier value |
+| `/reset_player_tier [player_name]` | Resets a player's manual tier value |
+| `/pref [role1] [role2] [role3] [role4] [role5]` | Sets role preferences |
+| `/role` | Updates role preferences interactively |
+| `/stats [user]` | Views detailed player stats and rank |
+| `/team_synergy_ow [usernames]` | Generates an AI-optimized Overwatch team composition |
+| `/valorant_ai_matchmaking [players_per_game]` | Generates Valorant teams using Riot API and AI |
+| `/start_mvp_voting [match_id]` | Starts MVP voting for a match |
+| `/end_mvp_voting [match_id]` | Ends MVP voting early for a match |
+| `/list_active_mvp_votes` | Lists all active MVP voting sessions |
+| `/help` | Displays help information |
+
+## Notes
+
+- Some commands require administrator permissions.
+- AI-based commands rely on external APIs (Riot API, Overfast API, Gemini/OpenAI) and may take a few seconds to respond.
 
 ---
 ## Background Tasks
@@ -376,7 +396,7 @@ The genetic algorithm matchmaking flow consists of these key steps:
    - `save_matchmaking_results()`: Saves the final teams to the database with a unique match ID
    - Teams are stored with player IDs, team assignments, and a sequential match identifier
 
-#### Performance Metrics & Balancing
+#### Performance Metrics & Balancing (League of Legends)
 
 The system calculates player performance using:
 
@@ -394,7 +414,7 @@ This advanced genetic algorithm approach consistently produces more balanced tea
 
 ---
 
-## Team Display & Announcement
+## Team Display & Announcement (League of Legends)
 
 The bot offers multiple ways to display teams:
 
@@ -433,7 +453,7 @@ See `google_export.md` for detailed setup instructions.
 
 ---
 
-##  Database Structure
+##  Database Structure (League of Legends)
 
 The bot uses SQLite with the following main tables:
 
@@ -455,20 +475,33 @@ The bot uses SQLite with the following main tables:
 5. Start the bot with `python tournament.py`
 
 ### Admin-Only Commands
+
 | Command | Description | Access |
 |---------|-------------|--------|
-| `/run_matchmaking [players_per_game] [selection_method]` | Start the matchmaking process | Admin only |
-| `/announce_teams [channel] [format]` | Announce created teams | Admin only |
+| `/allcommands` | List all registered slash commands | Admin/debug |
+| `/run_matchmaking [players_per_game] [selection_method]` | Start the matchmaking process using registered players | Admin only |
+| `/announce_teams [channel] [format]` | Announce created teams as text or image | Admin only |
 | `/display_teams [match_id]` | Display teams for a specific match | Admin only |
 | `/export_players [custom_name]` | Export player data to Google Sheets | Admin only |
 | `/import_players [sheet_name]` | Import player data from Google Sheets | Admin only |
-| `/swap_players [match_id] [player1] [player2]` | Swap two players between teams | Admin only |
-| `/record_match_result [match_id] [winning_team]` | Record match results | Admin only |
-| `/set_toxicity [player] [points]` | Set toxicity points for a player | Admin only |
-| `/set_tier [player] [tier]` | Manually set a player's tier | Admin only |
-| `/checkin_start [time]` | Start the check-in process | Admin only |
+| `/swap_team_players [match_id] [team1_player] [team2_player]` | Swap two players between teams | Admin only |
+| `/record_match_result [match_id] [winning_team]` | Record the result of a single match | Admin only |
+| `/record_match_results` | Record results for multiple matches | Admin only |
 | `/simulate_volunteers [count]` | Simulate volunteers for sitting out | Admin only |
-| `/giveaway [prize] [entries]` | Run a giveaway raffle | Admin only |
+| `/simulate_checkins [count] [status]` | Simulate player check-ins for testing | Admin only |
+| `/checkin_game [timeout]` | Start the check-in process for the next game | Admin only |
+| `/toxicity [player]` | Add 1 toxicity point to a player | Admin only |
+| `/view_player_tier [player_name]` | View a player's manual tier value | Admin only |
+| `/adjust_player_tier [player_name] [adjustment] [reason]` | Manually adjust a player's tier value | Admin only |
+| `/reset_player_tier [player_name]` | Reset a player's manual tier value | Admin only |
+| `/list_players` | List all registered players | Admin only |
+| `/player_match_history [player_name]` | View a player's match history | Admin only |
+| `/team_synergy_ow [usernames]` | Generate an AI-optimized Overwatch team composition | Admin only |
+| `/valorant_ai_matchmaking [players_per_game]` | Generate Valorant teams using Riot API and AI | Admin only |
+| `/start_mvp_voting [match_id]` | Start MVP voting for a match | Admin only |
+| `/end_mvp_voting [match_id]` | End MVP voting early for a match | Admin only |
+| `/list_active_mvp_votes` | List all active MVP voting sessions | Admin only |
+
 
 ### Configuration Options
 All configuration is done through the `.env` file. The main options are:
@@ -485,6 +518,8 @@ All configuration is done through the `.env` file. The main options are:
 | `PRIVATE_CH` | Channel ID for admin-only messages | Yes |
 | `API_KEY` | Riot Games API key | Yes |
 | `API_URL` | Riot Games API URL | Yes |
+| `OPEN_AI_KEY` | OpenAI ChatGPT API key | Optional |
+| `GEMINI_API_KEY` | Google Gemini API key | Optional |
 | `GOOGLE_SHEET_ID` | Google Sheet ID for import/export | Optional |
 | `CELL_RANGE` | Cell range in Google Sheet | Optional |
 | `LOL_SERVICE_PATH` | Path to Google service account JSON | Optional |
@@ -494,26 +529,15 @@ All configuration is done through the `.env` file. The main options are:
 ### Known Bugs
 - Database locking can occur when multiple operations happen simultaneously
   - **Workaround**: Restart the bot to clear any hanging connections
-- Team display may show duplicate players if multiple runs of matchmaking are done with the same match_id
-  - **Fix**: Now using sequential match IDs to avoid conflicts
 - Google Sheets export occasionally times out with large player pools
   - **Workaround**: Export in smaller batches or use a more stable internet connection
-- "NOT NULL constraint failed: game.game_name" error
-  - **Fix**: Game object instantiation corrected to properly handle game_name in API controller
-- Missing setup function in test controllers
-  - **Fix**: All controller files now include proper setup functions
-- Typos in log messages ("tage_id", "puui", and "game detail")
-  - **Fix**: Corrected typos in API controller and common_view.py for clearer log messages
-
-### Undeveloped Features
-- Automatic team balancing based on past performance
-- Player ranking system based on performance
 
 ### Compatibility and Requirements
 - Requires Python 3.8 or later
 - Discord.py library v2.0.0 or higher
 - SQLite database (included with Python)
 - Stable internet connection for Riot API and Discord connectivity
+- API keys for OpenAI ChatGPT and Google Gemini
 - For Google Sheets functionality: Google Cloud account and proper API setup
 
 ## 🔧 Troubleshooting Tips
@@ -523,21 +547,6 @@ All configuration is done through the `.env` file. The main options are:
 - Match display issues? Check that teams were properly created with `/run_matchmaking`
 - Database locked errors? Restart the bot to clear any hanging connections
 - Discord permission issues? Ensure the bot has proper permissions in the server
-
----
-
-##  Future Development
-
-### Planned Improvements
-- Improve image generation with more customization options
-- Expand Google Sheets integration for match results
-- Add tournament bracket management
-- Implement historical player performance tracking
-- Create a web dashboard for tournament management
-- Support for multiple games beyond League of Legends
-- Automated match result verification
-- Add ability for admins to selectively remove players from check-in pool
-- Implement player opt-out functionality after check-in
 
 
 ---

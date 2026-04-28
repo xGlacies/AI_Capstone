@@ -53,7 +53,7 @@ class OverwatchPlayerAnalysisService:
 
         return roles
 
-    def analyze_player_sync(self, battletag: str) -> str:
+    def analyze_player_sync(self, battletag: str, mode: str = "quickplay") -> str:
         formatted_tag = battletag.replace("#", "-")
 
         hero_roles = self.get_hero_roles()
@@ -77,13 +77,13 @@ class OverwatchPlayerAnalysisService:
 
         pc_response = requests.get(
             stats_url,
-            params={"platform": "pc", "gamemode": "quickplay"},
+            params={"platform": "pc", "gamemode": mode},
             timeout=20
         )
 
         console_response = requests.get(
             stats_url,
-            params={"platform": "console", "gamemode": "quickplay"},
+            params={"platform": "console", "gamemode": mode},
             timeout=20
         )
 
