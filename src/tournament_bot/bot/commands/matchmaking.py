@@ -174,6 +174,8 @@ def build_team_report_sync(usernames):
     ### Overall Team Analysis
     Team Strengths: [Explain how the chosen heroes synergize together]
     Team Weaknesses: [Explain what enemy compositions or situations might counter this team]
+
+    Use markdown section headers beginning with ### so the Discord bot can split each major section into a separate embed.
     """
 
     user_message = f"Here is the player data. Please determine the best team composition by prioritizing win rates, accuracy, and synergy over playtime:\n\n{ai_prompt_data}"
@@ -203,6 +205,56 @@ def get_time_played(categories):
         return int(t) if t else 0
     except ValueError:
         return 0
+
+def build_overwatch_report_embeds(report_text: str):
+    """
+    Converts the Overwatch AI report into Discord embeds.
+    Splits by markdown headings first, then chunks long sections safely.
+    """
+
+    embeds = []
+
+    # Split where the AI uses section headers like ### Player Assignments
+    sections = report_text.split("### ")
+
+    for section in sections:
+        section = section.strip()
+        if not section:
+            continue
+
+        lines = section.split("\n", 1)
+        title = lines[0].strip()
+        body = lines[1].strip() if len(lines) > 1 else ""
+
+        if not body:
+            body = "No details provided."
+
+        # Discord embed description limit is 4096.
+        # Use 3900 to leave room safely.
+        chunks = [body[i:i + 3900] for i in range(0, len(body), 3900)]
+
+        for index, chunk in enumerate(chunks):
+            embed_title = title if index == 0 else f"{title} continued"
+
+            embed = discord.Embed(
+                title=embed_title,
+                description=chunk,
+                color=discord.Color.blue()
+            )
+
+            embed.set_footer(text="Overwatch Team Synergy Report")
+            embeds.append(embed)
+
+    if not embeds:
+        embeds.append(
+            discord.Embed(
+                title="Overwatch Team Synergy Report",
+                description=report_text[:3900],
+                color=discord.Color.blue()
+            )
+        )
+
+    return embeds
 
 class MatchmakingController(commands.Cog):
     def __init__(self, bot):
@@ -976,18 +1028,11 @@ class MatchmakingController(commands.Cog):
         try:
             report_text = await asyncio.to_thread(build_team_report_sync, player_list)
             
-            # 5. Discord 2000 Character Limit Handling
-            if len(report_text) <= 2000:
-                await interaction.followup.send(content=report_text)
-            else:
-                # Split the text into chunks of 1900 to be safe
-                chunks = [report_text[i:i+1900] for i in range(0, len(report_text), 1900)]
-                for i, chunk in enumerate(chunks):
-                    # Send the first chunk directly to the followup, send the rest as standard channel messages
-                    if i == 0:
-                        await interaction.followup.send(content=chunk)
-                    else:
-                        await interaction.channel.send(content=chunk)
+            # 5. Send the report as Discord embeds
+            embeds = build_overwatch_report_embeds(report_text)
+
+            for embed in embeds:
+                await interaction.followup.send(embed=embed)
 
         except Exception as ex:
             await interaction.followup.send(f"An error occurred while generating the report: {str(ex)}")
