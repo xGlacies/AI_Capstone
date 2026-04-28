@@ -47,6 +47,7 @@ A comprehensive and feature-rich Discord bot designed to manage League of Legend
 │       │   │   ├── export_import.py
 │       │   │   ├── results.py
 │       │   │   ├── tier_management.py
+│       │   │   ├── valorant_ai_matchmaking.py
 │       │   │   └── [test/debug commands]
 │       │
 │       │   ├── listeners/              # Discord event listeners
@@ -58,6 +59,7 @@ A comprehensive and feature-rich Discord bot designed to manage League of Legend
 │       │   │   ├── signup_logic.py
 │       │   │   ├── api.py
 │       │   │   ├── matchmaking_llm_analysis.py
+│       │   │   ├── valorant_ai_matchmaking.py
 │       │   │   └── teamup_ai.py
 │       │
 │       │   └── views/                  # Discord UI (buttons, modals, etc.)
@@ -171,6 +173,9 @@ START_API_TASK=true
 # OpenAI Configuration (Optional - for advanced team matchmaking)
 OPEN_AI_KEY=your_openai_api_key_here
 prompt="Your OpenAI prompt for team matchmaking here"
+
+# Google Gemini (Optional - for Overwatch Team Comps)
+GEMINI_API_KEY=your_google_gemini_api_key_here
 
 # Google Sheets Integration (Optional)
 GOOGLE_SHEET_ID=your_google_sheet_id_here
