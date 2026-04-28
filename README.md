@@ -253,34 +253,34 @@ After saving the file and closing it, you can now click the file to run the bot.
 ## Command Overview
 
 | Command | Description |
-|--------|-------------|
+|----------------------------------------------------------|-------------|
+| `/allcommands` | Lists all registered slash commands for debugging |
 | `/display_teams [match_id]` | Shows teams for a specific match with role assignments |
 | `/announce_teams [channel] [format]` | Announces teams to a channel as text or image |
-| `/run_matchmaking [players_per_game] [selection_method]` | Generates balanced teams using genetic algorithm |
-| `/simulate_volunteers [count]` | Simulates volunteers for sitting out |
-| `/record_match_result [match_id] [winning_team]` | Records match results and updates stats |
-| `/player_match_history [user]` | Shows match history and performance details for a player |
-| `/stats [user]` | Displays detailed player stats, rank, and performance metrics |
-| `/pref [role1] [role2] [role3] [role4] [role5]` | Sets preferred roles for matchmaking |
-| `/role` | Updates role preferences interactively |
-| `/signup` *(button UI)* | Registers a player into the system (via embed/button) |
-| `/checkin` *(button UI)* | Allows players to check into a tournament |
-| `/help` | Displays help information |
-
-## Data Management Commands
-
-| Command | Description |
-|--------|-------------|
+| `/run_matchmaking [players_per_game] [selection_method]` | Generates balanced teams using registered players |
+| `/swap_team_players [match_id] [team1_player] [team2_player]` | Swaps two players between teams |
 | `/export_players [custom_name]` | Exports player data to Google Sheets |
 | `/import_players [sheet_name]` | Imports player data from Google Sheets |
-
-## New AI-Powered Commands
-
-| Command | Description |
-|--------|-------------|
-| `/team_synergy_ow [usernames]` | Generates an optimized Overwatch team composition using player stats and AI analysis |
-| `/player_synergy_ow [battletag]` | Analyzes an individual Overwatch player across Tank, Damage, and Support roles |
-| `/valorant_ai_matchmaking [...]` | Uses Riot API and AI to generate balanced Valorant teams based on player stats and roles |
+| `/simulate_volunteers [count]` | Simulates volunteers for sitting out |
+| `/simulate_checkins [count] [status]` | Simulates player check-ins for testing |
+| `/checkin_game [timeout]` | Starts the check-in process for the next game |
+| `/record_match_result [match_id] [winning_team]` | Records the result of a single match |
+| `/record_match_results` | Records results for multiple matches |
+| `/player_match_history [player_name]` | Shows a player's match history |
+| `/list_players` | Lists all registered players |
+| `/toxicity [player]` | Adds 1 toxicity point to a player |
+| `/view_player_tier [player_name]` | Views a player's manual tier value |
+| `/adjust_player_tier [player_name] [adjustment] [reason]` | Manually adjusts a player's tier value |
+| `/reset_player_tier [player_name]` | Resets a player's manual tier value |
+| `/pref [role1] [role2] [role3] [role4] [role5]` | Sets role preferences |
+| `/role` | Updates role preferences interactively |
+| `/stats [user]` | Views detailed player stats and rank |
+| `/team_synergy_ow [usernames]` | Generates an AI-optimized Overwatch team composition |
+| `/valorant_ai_matchmaking [players_per_game]` | Generates Valorant teams using Riot API and AI |
+| `/start_mvp_voting [match_id]` | Starts MVP voting for a match |
+| `/end_mvp_voting [match_id]` | Ends MVP voting early for a match |
+| `/list_active_mvp_votes` | Lists all active MVP voting sessions |
+| `/help` | Displays help information |
 
 ## Notes
 
@@ -478,16 +478,30 @@ The bot uses SQLite with the following main tables:
 
 | Command | Description | Access |
 |---------|-------------|--------|
-| `/run_matchmaking [players_per_game] [selection_method]` | Start the matchmaking process using the genetic algorithm | Admin only |
+| `/allcommands` | List all registered slash commands | Admin/debug |
+| `/run_matchmaking [players_per_game] [selection_method]` | Start the matchmaking process using registered players | Admin only |
 | `/announce_teams [channel] [format]` | Announce created teams as text or image | Admin only |
 | `/display_teams [match_id]` | Display teams for a specific match | Admin only |
 | `/export_players [custom_name]` | Export player data to Google Sheets | Admin only |
 | `/import_players [sheet_name]` | Import player data from Google Sheets | Admin only |
+| `/swap_team_players [match_id] [team1_player] [team2_player]` | Swap two players between teams | Admin only |
+| `/record_match_result [match_id] [winning_team]` | Record the result of a single match | Admin only |
+| `/record_match_results` | Record results for multiple matches | Admin only |
 | `/simulate_volunteers [count]` | Simulate volunteers for sitting out | Admin only |
-| `/record_match_result [match_id] [winning_team]` | Record match results and update stats | Admin only |
+| `/simulate_checkins [count] [status]` | Simulate player check-ins for testing | Admin only |
+| `/checkin_game [timeout]` | Start the check-in process for the next game | Admin only |
+| `/toxicity [player]` | Add 1 toxicity point to a player | Admin only |
+| `/view_player_tier [player_name]` | View a player's manual tier value | Admin only |
+| `/adjust_player_tier [player_name] [adjustment] [reason]` | Manually adjust a player's tier value | Admin only |
+| `/reset_player_tier [player_name]` | Reset a player's manual tier value | Admin only |
+| `/list_players` | List all registered players | Admin only |
+| `/player_match_history [player_name]` | View a player's match history | Admin only |
 | `/team_synergy_ow [usernames]` | Generate an AI-optimized Overwatch team composition | Admin only |
-| `/player_synergy_ow [battletag]` | Analyze an individual Overwatch player across all roles | Admin only |
-| `/valorant_matchmaking [...]` | Generate balanced Valorant teams using Riot API and AI | Admin only |
+| `/valorant_ai_matchmaking [players_per_game]` | Generate Valorant teams using Riot API and AI | Admin only |
+| `/start_mvp_voting [match_id]` | Start MVP voting for a match | Admin only |
+| `/end_mvp_voting [match_id]` | End MVP voting early for a match | Admin only |
+| `/list_active_mvp_votes` | List all active MVP voting sessions | Admin only |
+
 
 ### Configuration Options
 All configuration is done through the `.env` file. The main options are:
