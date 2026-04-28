@@ -166,15 +166,24 @@ def build_team_report_sync(usernames):
     Strengths: 
     * (Strength Bulletpoint 1)
     * (Strength Bulletpoint 2)
+    * (Optional Strength Bulletpoint 2)
     Weaknesses: 
     * (Weakness Bulletpoint 1)
     * (Weakness Bulletpoint 2)
+    * (Optional Weakness Bulletpoint 3)
     *(Repeat for all players)*
     
     ### Overall Team Analysis
-    Team Strengths: [Explain how the chosen heroes synergize together]
-    Team Weaknesses: [Explain what enemy compositions or situations might counter this team]
-
+    Team Strengths:
+    * (Strength Bulletpoint 1, Explain how the chosen heroes synergize together)
+    * (Strength Bulletpoint 2, Explain how the chosen heroes synergize together)
+    * (Optional Strength Bulletpoint 3, Explain how the chosen heroes synergize together)
+    Team Weaknesses:
+    Team Weaknesses:
+    * (Weakness Bulletpoint 1, Explain what enemy compositions or situations might counter this team)
+    * (Weakness Bulletpoint 2, Explain what enemy compositions or situations might counter this team)
+    * (Optional Weakness Bulletpoint 3, Explain what enemy compositions or situations might counter this team)
+    
     Use markdown section headers beginning with ### so the Discord bot can split each major section into a separate embed.
     """
 
