@@ -18,6 +18,7 @@ PACKAGE_COMMAND_MODULES = [
     # Matchmaking system
     "tournament_bot.bot.commands.matchmaking",
     "tournament_bot.bot.commands.matchmaking_test",
+    "tournament_bot.bot.commands.valorant_ai_matchmaking",
 
     # Utility / test command
     "tournament_bot.bot.commands.role_assignment_test",
