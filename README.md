@@ -21,35 +21,95 @@ A comprehensive and feature-rich Discord bot designed to manage League of Legend
 
 ##  Project Structure
 ```
-ksu_Esports_Tournament/
-├── common/                # Shared utilities and API functions
-│   ├── cached_details.py  # Caching logic
-│   ├── common_scripts.py  # Utility functions
-│   ├── database_connection.py # DB connection handling
-│   ├── riot_api.py        # Riot Games API integration
-│   └── images/            # Image assets for team displays
-├── config/                # Configuration management
-│   └── settings.py        # Global settings and environment vars
-├── controller/            # Discord command logic
-│   ├── admin_controller.py # Admin commands
-│   ├── match_making.py    # Standard matchmaking logic
-│   ├── genetic_match_making.py # Advanced genetic matchmaking
-│   ├── team_display_controller.py # Team display/announcement
-│   ├── player_signup.py   # Player registration
-│   └── [other controller files] # Various command modules
-├── model/                 # Database models
-│   ├── dbc_model.py       # Main database models
-│   ├── button_state.py    # UI button state handling
-│   └── [other model files] # Additional models
-├── view/                  # UI components
-│   ├── signUp_view.py     # Signup UI
-│   ├── team_announcement_image.py # Team image generation
-│   └── [other view files] # Various UI components
-├── tournament.py          # Main bot entry point
-├── web_server.py          # Simple web viewer for database
-├── requirements.txt       # Python dependencies
-├── google_export.md       # Google Sheets setup guide
-└── README.md              # Project documentation
+├── src/
+│   └── tournament_bot/                 # Main application package
+│       ├── __init__.py
+│       ├── main.py                     # Primary bot entry point
+│       ├── web_server.py               # Web interface (moved inside src)
+│
+│       ├── bot/                        # Discord bot layer
+│       │   ├── bot.py                  # Bot setup/initialization
+│       │   ├── command_registry.py     # Registers commands/cogs
+│       │   ├── events.py               # Core event handling
+│       │   ├── package_loader.py       # Dynamic module loading
+│       │
+│       │   ├── commands/               # Slash commands (formerly controllers)
+│       │   │   ├── admin.py
+│       │   │   ├── checkin.py
+│       │   │   ├── matchmaking.py
+│       │   │   ├── signup.py
+│       │   │   ├── player.py
+│       │   │   ├── player_management.py
+│       │   │   ├── team.py
+│       │   │   ├── team_swap.py
+│       │   │   ├── mvp_voting.py
+│       │   │   ├── giveaway.py
+│       │   │   ├── export_import.py
+│       │   │   ├── results.py
+│       │   │   ├── tier_management.py
+│       │   │   └── [test/debug commands]
+│       │
+│       │   ├── listeners/              # Discord event listeners
+│       │   │   └── member_events.py
+│       │
+│       │   ├── services/               # Business logic layer
+│       │   │   ├── matchmaking.py
+│       │   │   ├── genetic_matchmaking.py
+│       │   │   ├── signup_logic.py
+│       │   │   ├── api.py
+│       │   │   ├── matchmaking_llm_analysis.py
+│       │   │   └── teamup_ai.py
+│       │
+│       │   └── views/                  # Discord UI (buttons, modals, etc.)
+│       │       ├── signup.py
+│       │       ├── team_announcement_image.py
+│       │       ├── team_swap.py
+│       │       ├── checkin.py
+│       │       ├── match_results.py
+│       │       ├── mvp_vote.py
+│       │       ├── giveaway.py
+│       │       └── common.py
+│
+│       ├── config/                     # Configuration management
+│       │   └── settings.py
+│
+│       ├── core/                       # Shared utilities & infrastructure
+│       │   ├── cache.py
+│       │   ├── common_scripts.py
+│       │   ├── database.py
+│       │   ├── startup.py
+│       │   └── tasks.py
+│
+│       ├── integrations/               # External APIs
+│       │   └── riot_api.py
+│
+│       └── models/                     # Database models
+│           ├── dbc_model.py
+│           ├── button_state.py
+│           ├── checkin.py
+│           └── giveaway.py
+│
+├── tests/                              # Test suite
+│   ├── conftest.py
+│   ├── unit/
+│   └── integration/
+│
+├── docs/                               # Documentation
+│   ├── setup_guide.md
+│   ├── design_document.md
+│   ├── game_day_guide.md
+│   ├── toxicity_system.md
+│   └── [other docs]
+│
+├── .github/                            # CI/CD workflows
+│   └── workflows/
+│       └── docker-build.yml
+│
+├── Dockerfile
+├── requirements.txt
+├── pytest.ini
+├── .env.template
+├── README.md
 ```
 
 ---
@@ -58,7 +118,7 @@ ksu_Esports_Tournament/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/team2-swe/ksu_Esports_Tournament-.git
+git clone https://https://github.com/xGlacies/AI_Capstone-.git
 cd ksu_Esports_Tournament-
 ```
 
@@ -74,6 +134,9 @@ copy .env.template .env
 - The template includes all required fields with example values:
 
 ```
+# KSU Esports Tournament Bot - Environment Template
+# Copy this file to .env and fill in your values
+
 # Discord Configuration
 DISCORD_APITOKEN=your_discord_bot_token_here
 DISCORD_GUILD=your_discord_server_id_here
@@ -81,16 +144,17 @@ DISCORD_GUILD=your_discord_server_id_here
 # Database Configuration
 DATABASE_NAME=tournament.db
 
-# Channel IDs
+# Channel IDs - These define the names of channels the bot will use
 TOURNAMENT_CH=tournament_general
 FEEDBACK_CH=feedback_channel
-# CHANNEL_CONFIG must be a valid JSON string with this structure:
-# Format: {"Category": {"channel_name": {"role_key": "RoleName"}, ...}}
-# Use actual role names that exist in your Discord server (like "Admin" or "Moderator")
-# You can use "@everyone" for the default role that everyone can see
-CHANNEL_CONFIG={"Tournament": {"announcements": {"admin": "Admin", "everyone": "@everyone"}, "registration": {"everyone": "@everyone"}, "team-info": {"everyone": "@everyone"}, "results": {"everyone": "@everyone"}, "admin": {"admin": "Admin"}}}
-CHANNEL_PLAYER=t_announcement
+CHANNEL_PLAYER=tournament_announcements
 PRIVATE_CH=admin_channel
+
+# Channel Configuration - Defines which channels to create and their permissions
+# IMPORTANT: This must be valid JSON format. The admin_channel will be restricted to users with the Admin role.
+# IMPORTANT: Make sure the role names (like "Admin") actually exist in your Discord server.
+# Format: {"Category": {"channel_name": {"role_key": "RoleName"}, ...}}
+CHANNEL_CONFIG={"Tournament": {"tournament_announcement": {"admin": "Admin", "everyone": "@everyone"}, "tournament_general": {"everyone": "@everyone"}, "feedback_channel": {"everyone": "@everyone"}, "admin_channel": {"admin": "Admin"}}}
 
 # Webhook Configuration
 WEBHOOK_URL=your_webhook_url_here
@@ -158,10 +222,26 @@ Ensure you are using Python 3.8 or later.
 
 ### 8. Run the Bot
 ```bash
-python tournament.py
+set PYTHONPATH=src
+python -m tournament_bot.main
 ```
 
 If successful, the terminal will display: `Logged into server as [BotName]`
+
+### 9. For Ease of Use, Run the Bot using the local .bat file
+
+Update the filepath after "cd /d " on line 2 to your project directory.
+
+```bash
+@echo off
+cd /d C:\Users\username\Documents\GitHub\project_folder
+call venv\Scripts\activate
+set PYTHONPATH=src
+python -m tournament_bot.main
+pause
+```
+
+After saving the file and closing it, you can now click the file to run the bot. This is easier than typing it out in command prompt every time.
 
 ---
 
